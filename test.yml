@@ -1,0 +1,55 @@
+---
+- name: Create Azure VM snapshots
+  hosts: localhost
+  connection: local
+  vars:
+    vm_name: my-vm                 # Azure VM name
+    resource_group: my-resource-group
+    stop_vm: true                  # Set to false for crash-consistent snapshots
+    snapshot_prefix: "snapshot"
+    retention_days: 7
+    location: eastus               # Azure region
+
+  tasks:
+    - name: Stop VM for application-consistent snapshot
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vm_name }}"
+        state: stopped
+      when: stop_vm
+
+    - name: Get VM disk information
+      azure.azcollection.azure_rm_virtualmachine_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vm_name }}"
+      register: vm_info
+
+    - name: Create OS disk snapshot
+      azure.azcollection.azure_rm_snapshot:
+        resource_group: "{{ resource_group }}"
+        name: "{{ snapshot_prefix }}-os-{{ ansible_date_time.iso8601_basic | regex_replace('[^A-Za-z0-9]', '') }}"
+        location: "{{ location }}"
+        creation_data:
+          create_option: Copy
+          source_id: "{{ vm_info.virtual_machines[0].storage_profile.os_disk.managed_disk.id }}"
+        incremental: true
+        sku:
+          name: Standard_LRS
+        tags:
+          type: os
+          vm: "{{ vm_name }}"
+          retention_days: "{{ retention_days }}"
+          created_at: "{{ ansible_date_time.iso8601 }}"
+
+
+    - name: Start VM after snapshot
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vm_name }}"
+        state: started
+      when: stop_vm
+
+    - name: Get the snapshot instance by name
+      azure_rm_snapshot_info:
+        resource_group: myResourceGroup
+        name: mySnapshot

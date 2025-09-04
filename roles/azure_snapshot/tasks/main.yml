@@ -1,0 +1,6 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for azure_snapshot
+- name: Get disks
+  ansible.builtin.include_tasks:
+    file: get_disks.yml

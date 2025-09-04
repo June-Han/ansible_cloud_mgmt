@@ -1,0 +1,8 @@
+---
+- name: Azure Cloud Management
+  hosts: localhost
+  gather_facts: true
+  tasks:
+    - name: Include Azure role
+      ansible.builtin.include_role:
+        name: azure_snapshot
