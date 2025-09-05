@@ -49,7 +49,7 @@
         state: started
       when: stop_vm
 
-    - name: Get the snapshot instance by name
-      azure_rm_snapshot_info:
-        resource_group: myResourceGroup
-        name: mySnapshot
+    # - name: Get the snapshot instance by name
+    #   azure_rm_snapshot_info:
+    #     resource_group: myResourceGroup
+    #     name: mySnapshot
